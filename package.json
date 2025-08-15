@@ -1,0 +1,22 @@
+{
+  "name": "libroshelf",
+  "version": "1.0.0",
+  "description": "Readed Books registration and puntiations Backend API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alu0101540153/LibroShelf_Backend.git"
+  },
+  "author": "Víctor Rodríguez Dorta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alu0101540153/LibroShelf_Backend/issues"
+  },
+  "homepage": "https://github.com/alu0101540153/LibroShelf_Backend#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
