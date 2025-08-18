@@ -8,7 +8,13 @@ export const addUserBook = async (req: Request, res: Response) => {
     try {
         const { bookId } = req.body;
 
-        // Optional: Check if the book exists in Google Books API
+        // check if there are a user, with the same id, and the same book
+        const existingUserBook = await UserBook.findOne({ userId: req.user._id, bookId });
+        if (existingUserBook) {
+            return res.status(400).json({ error: "Book already exists in your collection" });
+        }
+
+        // Check if the book exists in Google Books API
         const googleRes = await axios.get(`https://www.googleapis.com/books/v1/volumes/${bookId}`);
         if (!googleRes.data) {
             return res.status(404).json({ error: "Book not found in Google Books API" });
@@ -39,7 +45,7 @@ export const getUserBooks = async (req: Request, res: Response) => {
 // Update a user's book
 export const updateUserBook = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params; // id is googleBookId
+        const { id } = req.body; // id is googleBookId
         const { rating, description } = req.body;
 
         const userBook = await UserBook.findOne({ bookId: id, userId: req.user._id });
@@ -60,9 +66,10 @@ export const updateUserBook = async (req: Request, res: Response) => {
 // Delete a user's book
 export const deleteUserBook = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-
-        const userBook = await UserBook.findOneAndDelete({ _id: id, userId: req.user._id });
+        const { bookId } = req.body;
+        console.log("Deleting book with ID:", bookId);
+        // Use bookId instead of _id for lookup
+        const userBook = await UserBook.findOneAndDelete({ bookId: bookId, userId: req.user._id });
         if (!userBook) {
             return res.status(404).json({ error: "Book not found in your collection" });
         }
@@ -75,7 +82,7 @@ export const deleteUserBook = async (req: Request, res: Response) => {
 
 // New handler for searching books in Google Books
 export const searchBooks = async (req: Request, res: Response) => {
-    const { title } = req.query;
+    const { title } = req.body;
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: 'The title is required as a query parameter' });
     }
@@ -95,5 +102,49 @@ export const searchBooks = async (req: Request, res: Response) => {
         return res.json(books);
     } catch (error: any) {
         return res.status(500).json({ error: 'Error searching Google Books', details: error.message });
+    }
+};
+
+// list all the books from a user, and sort it by the mode specified
+export const getUserBooksList = async (req: Request, res: Response) => {
+    const { id, sortType } = req.body;
+
+    try {
+        const userBooks = await UserBook.find({ userId: id });
+        if (sortType === 'rate') {
+            userBooks.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        }
+
+        // only keep the book IDs, the rate and the personal description
+        const bookDetails = userBooks.map(book => ({
+            idbook: book.bookId,
+            rating: book.rating,
+            personalDescription: book.personalDescription
+        }));
+
+        console.log("Book details:", bookDetails);
+
+        // for each book, fetch its details from Google Books API
+        const books = await Promise.all(bookDetails.map(async (book) => {
+            const response = await axios.get(`https://www.googleapis.com/books/v1/volumes/${book.idbook}`);
+            const volumeInfo = response.data.volumeInfo;
+            return {
+                idbook: book.idbook,
+                rating: book.rating,
+                personalDescription: book.personalDescription,
+                volumeInfo: {
+                    title: volumeInfo?.title,
+                    authors: volumeInfo?.authors,
+                    imageLinks: {
+                        smallThumbnail: volumeInfo?.imageLinks?.smallThumbnail,
+                        small: volumeInfo?.imageLinks?.thumbnail
+                    }
+                }
+            };
+        }));
+
+        res.json(books);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message || "Error fetching user's books" });
     }
 };

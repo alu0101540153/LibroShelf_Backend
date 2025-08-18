@@ -3,13 +3,13 @@ import { Router } from "express";
 import { body, param } from "express-validator";
 import { authenticate } from "../middleware/auth";
 import { handleImputErrors } from "../middleware/validation";
-import { addUserBook, getUserBooks, updateUserBook, deleteUserBook, searchBooks } from "../handlers/userBookHandlers";
+import { addUserBook, getUserBooks, updateUserBook, deleteUserBook, searchBooks, getUserBooksList } from "../handlers/userBookHandlers";
 
 const userBookRouter = Router();
 
 // Add a book to the user's collection
 userBookRouter.post(
-    '/userBooks',
+    '/add',
     authenticate,
     body('bookId')
         .notEmpty()
@@ -20,17 +20,18 @@ userBookRouter.post(
 
 // Get all books of the authenticated user
 userBookRouter.get(
-    '/userBooks',
+    '/mybooks',
     authenticate,
+    handleImputErrors,
     getUserBooks
 );
 
 
 // Update a user's book (rating or description)
 userBookRouter.put(
-    '/userBooks/:id',
+    '/update',
     authenticate,
-    param('id')
+    body('id')
         .notEmpty()
         .withMessage('UserBook ID is required'),
     body('rating')
@@ -46,9 +47,9 @@ userBookRouter.put(
 
 // Delete a book from the user's collection
 userBookRouter.delete(
-    '/userBooks/:id',
+    '/delete',
     authenticate,
-    param('id')
+    body('bookId')
         .notEmpty()
         .withMessage('UserBook ID is required'),
     handleImputErrors,
@@ -57,9 +58,28 @@ userBookRouter.delete(
 
 
 // Search books in Google Books by title (GET, query param)
+// http://localhost:4000/api/user-books/search
 userBookRouter.get(
     '/search',
+    body('title')
+        .notEmpty()
+        .withMessage('Title is required'),
+    handleImputErrors,
     searchBooks
+);
+
+// list all books of a user
+userBookRouter.post(
+    '/list/',
+    body('id')
+        .notEmpty()
+        .withMessage('User ID is required'),
+    body('sortType')
+        .optional()
+        .isString()
+        .withMessage('Sort type must be a string'),
+    handleImputErrors,
+    getUserBooksList
 );
 
 export default userBookRouter;

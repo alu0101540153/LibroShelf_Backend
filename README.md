@@ -1,4 +1,4 @@
-# 🚀 LibroShelf Backend API
+#  📖 LibroShelf Backend API
 
 <div align="center">
   
