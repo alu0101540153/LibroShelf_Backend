@@ -23,6 +23,11 @@ LibroShelf Backend API is a RESTful service designed to power the LibroShelf web
 - Error handling and validation
 - Environment-based configuration
 
+Funtions: 
+- Follow sistem
+- Save your books
+- rate your own books and add comments
+
 ## 🛠️ Installation
 
 1. **Clone the repository:**
@@ -221,7 +226,3 @@ LibroShelf Backend API is a RESTful service designed to power the LibroShelf web
 ## 🤝 Contributing
 
 Contributions are welcome! Please open issues or submit pull requests for improvements.
-
-## 📄 License
-
-This project is licensed under the MIT License.
