@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import UserBook from "../models/UserBook";
+import User from "../models/User";
 
 // Add a book to user's collection
 export const addUserBook = async (req: Request, res: Response) => {
@@ -22,7 +23,12 @@ export const addUserBook = async (req: Request, res: Response) => {
 
         const userBook = new UserBook({
             userId: req.user._id,
-            bookId
+            userName: req.user.name,
+            bookId,
+            title: googleRes.data.volumeInfo?.title,
+            authors: googleRes.data.volumeInfo?.authors,
+            smallThumbnail: googleRes.data.volumeInfo?.imageLinks?.smallThumbnail,
+            thumbnail: googleRes.data.volumeInfo?.imageLinks?.thumbnail
         });
 
         await userBook.save();
@@ -71,9 +77,11 @@ export const deleteUserBook = async (req: Request, res: Response) => {
         // Use bookId instead of _id for lookup
         const userBook = await UserBook.findOneAndDelete({ bookId: bookId, userId: req.user._id });
         if (!userBook) {
+            console.log("Book not found in user's collection:", bookId);
             return res.status(404).json({ error: "Book not found in your collection" });
         }
 
+        console.log("Book removed from user's collection:", userBook);
         res.json({ message: "Book removed from your collection" });
     } catch (e: any) {
         res.status(500).json({ error: e.message || "Error deleting book" });
@@ -88,63 +96,49 @@ export const searchBooks = async (req: Request, res: Response) => {
     }
     try {
         const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}`);
-        const books = (response.data.items || []).map((item: any) => ({
+        const books = (response.data.items || [])
+            .slice(0, 5)
+            .map((item: any) => ({
             id: item.id,
             volumeInfo: {
                 title: item.volumeInfo?.title,
                 authors: item.volumeInfo?.authors,
                 imageLinks: {
-                    smallThumbnail: item.volumeInfo?.imageLinks?.smallThumbnail,
-                    small: item.volumeInfo?.imageLinks?.thumbnail
+                smallThumbnail: item.volumeInfo?.imageLinks?.smallThumbnail,
+                small: item.volumeInfo?.imageLinks?.thumbnail
                 }
             }
-        }));
+            }));
         return res.json(books);
     } catch (error: any) {
         return res.status(500).json({ error: 'Error searching Google Books', details: error.message });
-    }
+    }   
 };
 
 // list all the books from a user, and sort it by the mode specified
 export const getUserBooksList = async (req: Request, res: Response) => {
-    const { id, sortType } = req.body;
+    console.log("Fetching user's books with body:", req.body);
+    const { handle, sortType } = req.body;
 
     try {
-        const userBooks = await UserBook.find({ userId: id });
+        // first get the info of the user by its handle
+        const user = await User.findOne({ handle });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        console.log("User found");
+
+        // then get the books of the user
+        const userBooks = await UserBook.find({ userId: user._id });
         if (sortType === 'rate') {
             userBooks.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         }
 
-        // only keep the book IDs, the rate and the personal description
-        const bookDetails = userBooks.map(book => ({
-            idbook: book.bookId,
-            rating: book.rating,
-            personalDescription: book.personalDescription
-        }));
-
-        console.log("Book details:", bookDetails);
-
-        // for each book, fetch its details from Google Books API
-        const books = await Promise.all(bookDetails.map(async (book) => {
-            const response = await axios.get(`https://www.googleapis.com/books/v1/volumes/${book.idbook}`);
-            const volumeInfo = response.data.volumeInfo;
-            return {
-                idbook: book.idbook,
-                rating: book.rating,
-                personalDescription: book.personalDescription,
-                volumeInfo: {
-                    title: volumeInfo?.title,
-                    authors: volumeInfo?.authors,
-                    imageLinks: {
-                        smallThumbnail: volumeInfo?.imageLinks?.smallThumbnail,
-                        small: volumeInfo?.imageLinks?.thumbnail
-                    }
-                }
-            };
-        }));
-
-        res.json(books);
+        console.log("User's books fetched successfully:");
+        // Respond with the user info + the user books
+        res.json({ user, books: userBooks });
     } catch (e: any) {
         res.status(500).json({ error: e.message || "Error fetching user's books" });
     }
 };
+

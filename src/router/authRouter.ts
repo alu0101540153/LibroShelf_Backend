@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { body } from "express-validator"
-import { createAccount, login } from "../handlers";
+import { createAccount, login } from "../handlers/userHandlers";
 import { handleImputErrors } from "../middleware/validation";
 
 const authRouter = Router();

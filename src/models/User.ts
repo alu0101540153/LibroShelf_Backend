@@ -6,6 +6,7 @@ export interface IUser extends Document{
     email: string
     password: string
     description: string
+    follows: string[]
 }
 
 // codigo exclusivo de mongoose
@@ -38,7 +39,11 @@ const userSchema= new Schema({
         type: String,
         default: '',
         trim: true
-    }
+    },
+    follows: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 })
 
 const User= mongoose.model<IUser>('User', userSchema)

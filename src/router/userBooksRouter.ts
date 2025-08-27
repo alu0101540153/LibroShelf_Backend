@@ -70,10 +70,10 @@ userBookRouter.get(
 
 // list all books of a user
 userBookRouter.post(
-    '/list/',
-    body('id')
+    '/list',
+    body('handle')
         .notEmpty()
-        .withMessage('User ID is required'),
+        .withMessage('User handle is required'),
     body('sortType')
         .optional()
         .isString()
@@ -81,5 +81,7 @@ userBookRouter.post(
     handleImputErrors,
     getUserBooksList
 );
+
+
 
 export default userBookRouter;

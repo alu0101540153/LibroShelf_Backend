@@ -8,7 +8,7 @@ const router = Router();
 
 // specific routes
 router.use('/api/users', userRouter);
-router.use('/api/users', authRouter);
 router.use('/api/user-books', userBookRouter);
+router.use('/api/users', authRouter);
 
 export default router;
