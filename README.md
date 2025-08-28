@@ -14,6 +14,8 @@
 
 LibroShelf Backend API is a RESTful service designed to power the LibroShelf web application. It provides endpoints for managing books, users, authentication, and other core features. Built with Node.js, TypeScript, Express, and MongoDB, the API ensures scalability, security, and maintainability.
 
+For the books database , i used GoogleBooksAPI. 
+
 ## 🚀 Features
 
 - User authentication and authorization (JWT)
@@ -22,6 +24,7 @@ LibroShelf Backend API is a RESTful service designed to power the LibroShelf web
 - Secure password hashing
 - Error handling and validation
 - Environment-based configuration
+- Books info , with the thumbnail
 
 Funtions: 
 - Follow sistem
