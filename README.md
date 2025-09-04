@@ -16,6 +16,10 @@ LibroShelf Backend API is a RESTful service designed to power the LibroShelf web
 
 For the books database , i used GoogleBooksAPI. 
 
+## 🗂️ Architecture Diagram
+
+![LibroShelf Backend Architecture](public/diagrama.png)
+
 ## 🚀 Features
 
 - User authentication and authorization (JWT)
